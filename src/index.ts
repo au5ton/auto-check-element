@@ -192,7 +192,7 @@ async function check(autoCheckElement: AutoCheckElement) {
     return
   }
 
-  const jsonBody = JSON.stringify({ 'value': input.value });
+  const jsonBody = JSON.stringify({value: input.value})
   const body = new FormData()
   body.append(csrfField, csrf)
   body.append('value', input.value)
@@ -217,8 +217,8 @@ async function check(autoCheckElement: AutoCheckElement) {
       credentials: 'same-origin',
       signal: state.controller.signal,
       method: 'POST',
-      headers: json ? { 'content-type': 'application/json' } : undefined,
-      body: json ? jsonBody : body,
+      headers: json ? {'content-type': 'application/json'} : undefined,
+      body: json ? jsonBody : body
     })
     if (response.ok) {
       processSuccess(response, input, autoCheckElement.required)
