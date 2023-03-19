@@ -94,6 +94,18 @@ export default class AutoCheckElement extends HTMLElement {
   set csrfField(value: string) {
     this.setAttribute('csrf-field', value)
   }
+
+  get json(): boolean {
+    return this.hasAttribute('data-json')
+  }
+
+  set json(value: boolean) {
+    if (value) {
+      this.setAttribute('data-json', '')
+    } else {
+      this.removeAttribute('data-json')
+    }
+  }
 }
 
 function setLoadingState(event: Event) {
@@ -163,6 +175,7 @@ async function check(autoCheckElement: AutoCheckElement) {
   const src = autoCheckElement.src
   const csrf = autoCheckElement.csrf
   const state = states.get(autoCheckElement)
+  const json = autoCheckElement.json
 
   // If some attributes are missing we want to exit early and make sure that the element is valid.
   if (!src || !csrf || !state) {
@@ -179,6 +192,7 @@ async function check(autoCheckElement: AutoCheckElement) {
     return
   }
 
+  const jsonBody = JSON.stringify({ 'value': input.value });
   const body = new FormData()
   body.append(csrfField, csrf)
   body.append('value', input.value)
@@ -203,7 +217,8 @@ async function check(autoCheckElement: AutoCheckElement) {
       credentials: 'same-origin',
       signal: state.controller.signal,
       method: 'POST',
-      body
+      headers: json ? { 'content-type': 'application/json' } : undefined,
+      body: json ? jsonBody : body,
     })
     if (response.ok) {
       processSuccess(response, input, autoCheckElement.required)
