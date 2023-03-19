@@ -12,8 +12,10 @@ export default class AutoCheckElement extends HTMLElement {
     set required(required: boolean);
     get csrfField(): string;
     set csrfField(value: string);
-    get json(): boolean;
-    set json(value: boolean);
+    get useJsonHeader(): boolean;
+    get useJsonField(): boolean;
+    get json(): string;
+    set json(value: string);
 }
 declare global {
     interface Window {

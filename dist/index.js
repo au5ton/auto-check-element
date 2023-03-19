@@ -122,16 +122,17 @@ class AutoCheckElement extends HTMLElement {
     set csrfField(value) {
         this.setAttribute('csrf-field', value);
     }
+    get useJsonHeader() {
+        return this.hasAttribute('data-json') || this.json === '';
+    }
+    get useJsonField() {
+        return this.hasAttribute('data-json') || this.json.trim() !== '';
+    }
     get json() {
-        return this.hasAttribute('data-json');
+        return this.getAttribute('data-json') || '';
     }
     set json(value) {
-        if (value) {
-            this.setAttribute('data-json', '');
-        }
-        else {
-            this.removeAttribute('data-json');
-        }
+        this.setAttribute('data-json', value);
     }
 }
 function setLoadingState(event) {
@@ -192,6 +193,8 @@ async function check(autoCheckElement) {
     const csrf = autoCheckElement.csrf;
     const state = states.get(autoCheckElement);
     const json = autoCheckElement.json;
+    const useJsonHeader = autoCheckElement.useJsonHeader;
+    const useJsonField = autoCheckElement.useJsonField;
     if (!src || !csrf || !state) {
         if (autoCheckElement.required) {
             input.setCustomValidity('');
@@ -224,11 +227,23 @@ async function check(autoCheckElement) {
             credentials: 'same-origin',
             signal: state.controller.signal,
             method: 'POST',
-            headers: json ? { 'content-type': 'application/json' } : undefined,
-            body: json ? jsonBody : body
+            headers: useJsonHeader ? { 'content-type': 'application/json' } : undefined,
+            body: useJsonHeader ? jsonBody : body
         });
         if (response.ok) {
-            processSuccess(response, input, autoCheckElement.required);
+            if (useJsonField) {
+                const data = await response.json();
+                const isValid = !!data[json];
+                if (isValid) {
+                    processSuccess(response, input, autoCheckElement.required);
+                }
+                else {
+                    processFailure(response, input, autoCheckElement.required);
+                }
+            }
+            else {
+                processSuccess(response, input, autoCheckElement.required);
+            }
         }
         else {
             processFailure(response, input, autoCheckElement.required);
